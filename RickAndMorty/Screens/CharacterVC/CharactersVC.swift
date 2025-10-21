@@ -15,21 +15,29 @@ class CharactersVC: UIViewController {
    
    private var dataSource: UICollectionViewDiffableDataSource<Section, Character>?
    
-   var collectionView: UICollectionView!
-   var filtersStackView = UIStackView()
+   private var collectionView: UICollectionView!
+   private var filtersStackView = UIStackView()
    
-   let networkManager = NetworkManager.shared
-   var characters: [Character] = []
+   private let networkManager = NetworkManager.shared
+   private var characters: [Character] = []
+   private var filteredCharacters: [Character] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
        configureCollectionView()
        configureDataSource()
-       navigationItem.title = "Characters"
+       configureSearchBar()
+       navigationItem.title = "Rick and Morty"
        Task {
           await exampleRequest()
        }
     }
+   
+   private func configureSearchBar() {
+      let searchController = UISearchController(searchResultsController: nil)
+      searchController.searchResultsUpdater = self // Your view controller will update search results
+      navigationItem.searchController = searchController
+   }
    
    private func configureCollectionView() {
       collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
@@ -128,26 +136,15 @@ extension CharactersVC: UICollectionViewDelegate {
    }
 }
 
-//private func configureCollectionView() {
-//    collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createCompositionalLayout() )
-//    view.addSubview(collectionView)
-//   view.addSubview(filtersStackView)
-//   
-//    collectionView.delegate = self
-//    
-//    collectionView.register(CharacterCell.self, forCellWithReuseIdentifier: CharacterCell.reuseId)
-//            
-//    collectionView.translatesAutoresizingMaskIntoConstraints = false
-//   filtersStackView.translatesAutoresizingMaskIntoConstraints = false
-//    NSLayoutConstraint.activate([
-//      filtersStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-//        filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//      filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-//      filtersStackView.heightAnchor.constraint(equalToConstant: 40),
-//        
-//        collectionView.topAnchor.constraint(equalTo: filtersStackView.bottomAnchor, constant: 15),
-//        collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//        collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-//        collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-//    ])
-//}
+extension CharactersVC: UISearchResultsUpdating {
+   func updateSearchResults(for searchController: UISearchController) {
+      guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
+          // If search text is empty, display all items
+         updateData(characters)
+          return
+      }
+
+      let filteredItems = characters.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+      updateData(filteredItems)
+   }
+}
