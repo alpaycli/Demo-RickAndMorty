@@ -12,6 +12,7 @@ class GFTabBarController: UITabBarController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+       overrideUserInterfaceStyle = .dark
         UITabBar.appearance().tintColor = .systemGreen
         viewControllers = [createCharactersVCNC(), createFavoritesNC()]
     }

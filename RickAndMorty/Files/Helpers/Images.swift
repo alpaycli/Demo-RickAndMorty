@@ -7,6 +7,14 @@
 
 import Foundation
 
+enum BookmarkImage: String {
+   case bookmark = "bookmark-icon"
+   /// Means remove bookmark
+   case bookmarkFilled = "bookmark-icon-filled"
+   case bookmarkGreenFilled = "bookmark-icon-green"
+   
+}
+
 enum GenderImage: String {
    case male = "male-icon"
    case female = "female-icon"

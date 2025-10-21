@@ -30,14 +30,15 @@ class CharactersVC: UIViewController {
           await exampleRequest()
        }
     }
-
    
    private func configureCollectionView() {
       collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
-              view.addSubview(collectionView)
-
-              collectionView.register(CharacterCell.self, forCellWithReuseIdentifier: CharacterCell.reuseId)
-              collectionView.delegate = self
+      view.addSubview(collectionView)
+      
+      collectionView.register(CharacterCell.self, forCellWithReuseIdentifier: CharacterCell.reuseId)
+      collectionView.delegate = self
+      
+      collectionView.backgroundColor = .init(hexString: "#3A0564")
    }
    
    private func configureDataSource() {
@@ -112,6 +113,17 @@ extension CharactersVC: UICollectionViewDelegate {
    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
       let character = characters[indexPath.row]
       let destinationVC = CharacterDetailVC(character: character)
+      
+      destinationVC.onUpdate = { [weak self] updatedCharacter in
+         guard let self else { return }
+         if let index = characters.firstIndex(where: { $0.id == updatedCharacter.id }) {
+            print(updatedCharacter.isBookmarked)
+            print(characters[index].isBookmarked)
+            characters[index] = updatedCharacter
+            updateData(self.characters)
+         }
+      }
+      
       navigationController?.pushViewController(destinationVC, animated: true)
    }
 }

@@ -28,6 +28,19 @@ struct Character: Codable, Identifiable, Hashable {
    let gender: String
    let image: URL?
    let origin: Origin
+   
+   var isBookmarked: Bool = false
+   
+   enum CodingKeys: CodingKey {
+      case id
+      case name
+      case status
+      case species
+      case type
+      case gender
+      case image
+      case origin
+   }
 
    struct Origin: Codable, Hashable {
       let name: String

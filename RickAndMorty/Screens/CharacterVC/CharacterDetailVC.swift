@@ -9,6 +9,11 @@ import UIKit
 
 class CharacterDetailVC: UIViewController {
    
+   private let bookmarkManager = BookmarkManager()
+   
+   private let bookmarkButton = UIButton()
+   private let backButton = UIButton()
+   
    private let titleLabel = UILabel()
    private let imageView = GFAvatarImageView(frame: .zero)
    
@@ -19,7 +24,8 @@ class CharacterDetailVC: UIViewController {
    private let originLabel      = GFTitleLabel()
    private let detailsStackView = UIStackView()
    
-   private let character: Character
+   var onUpdate: ((Character) -> Void)?
+   private var character: Character
    init(character: Character) {
       self.character = character
       super.init(nibName: nil, bundle: nil)
@@ -31,9 +37,21 @@ class CharacterDetailVC: UIViewController {
    
    override func viewDidLoad() {
       super.viewDidLoad()
+      configureToolbar()
       configureTitleLabel()
       configureImageView()
       configureStackView()
+      view.backgroundColor = .init(hexString: "#3A0564")
+   }
+   
+   override func viewWillAppear(_ animated: Bool) {
+       super.viewWillAppear(animated)
+       self.navigationController?.setNavigationBarHidden(true, animated: animated)
+   }
+   
+   override func viewWillDisappear(_ animated: Bool) {
+       super.viewWillDisappear(animated)
+       self.navigationController?.setNavigationBarHidden(false, animated: animated)
    }
    
    private func configureStackView() {
@@ -61,6 +79,7 @@ class CharacterDetailVC: UIViewController {
       speciesLabel.text = NSLocalizedString("Species", comment: "") + ": \(character.species)"
       typeLabel.text = NSLocalizedString("Type", comment: "") + ": \(character.type)"
       originLabel.text = NSLocalizedString("Origin", comment: "") + ": \(character.origin.name)"
+      bookmarkButton.setImage(.init(named: character.isBookmarked ? BookmarkImage.bookmarkFilled.rawValue : BookmarkImage.bookmark.rawValue), for: .normal)
    }
    
    private func configureTitleLabel() {
@@ -76,8 +95,8 @@ class CharacterDetailVC: UIViewController {
       
       NSLayoutConstraint.activate([
          titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-         titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-         titleLabel.heightAnchor.constraint(equalToConstant: 44)
+         titleLabel.topAnchor.constraint(equalTo: bookmarkButton.bottomAnchor, constant: 14),
+         titleLabel.heightAnchor.constraint(equalToConstant: 54)
       ])
    }
    
@@ -94,5 +113,46 @@ class CharacterDetailVC: UIViewController {
          imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
          imageView.heightAnchor.constraint(equalToConstant: 330)
       ])
+   }
+   
+   private func configureToolbar() {
+      view.addSubview(bookmarkButton)
+      view.addSubview(backButton)
+      
+      let bookmarkIcon = UIImage(named: BookmarkImage.bookmark.rawValue)
+      let backIcon = UIImage(named: "back-icon")
+      bookmarkButton.setImage(bookmarkIcon, for: .normal)
+      backButton.setImage(backIcon, for: .normal)
+      
+      bookmarkButton.addTarget(nil, action: #selector(bookmarkButtonTapped), for: .touchUpInside)
+      backButton.addTarget(nil, action: #selector(backButtonTapped), for: .touchUpInside)
+      
+      bookmarkButton.translatesAutoresizingMaskIntoConstraints = false
+      backButton.translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate([
+         bookmarkButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+         bookmarkButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+         bookmarkButton.widthAnchor.constraint(equalToConstant: 32),
+         bookmarkButton.heightAnchor.constraint(equalToConstant: 32),
+         
+         backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+         backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+         backButton.widthAnchor.constraint(equalToConstant: 40),
+         backButton.heightAnchor.constraint(equalToConstant: 40)
+      ])
+   }
+   
+   @objc func bookmarkButtonTapped() {
+      Task {
+         await bookmarkManager.toggle(character)
+         character.isBookmarked.toggle()
+         
+         bookmarkButton.setImage(.init(named: character.isBookmarked ? BookmarkImage.bookmarkFilled.rawValue : BookmarkImage.bookmark.rawValue), for: .normal)
+         onUpdate?(character)
+      }
+   }
+   
+   @objc func backButtonTapped() {
+      self.navigationController?.popViewController(animated: true)
    }
 }
