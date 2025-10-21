@@ -27,18 +27,10 @@ struct Character: Codable, Identifiable, Hashable {
    let type: String
    let gender: String
    let image: URL?
-//   let origin: String
-   
-//   enum Status: String, Codable {
-//      case alive = "Alive"
-//      case dead = "Dead"
-//      case unknown = "unknown"
-//   }
-//   
-//   enum Gender: String, Codable {
-//      case female = ""
-//      case male = "Male"
-//      case genderless = "Genderless"
-//      case unknown = "unknown"
-//   }
+   let origin: Origin
+
+   struct Origin: Codable, Hashable {
+      let name: String
+      let url: String
+   }
 }

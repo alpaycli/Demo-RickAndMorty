@@ -96,8 +96,10 @@ class CharactersVC: UIViewController {
 
       do {
          let response = try await networkManager.fetch(CharacterResponse.self, url: urlRequest)
+         let characters = response.results
+         self.characters = characters
          DispatchQueue.main.async {
-            self.updateData(response.results)
+            self.updateData(characters)
          }
       } catch {
          print("Error", error.localizedDescription)
@@ -107,7 +109,11 @@ class CharactersVC: UIViewController {
 }
 
 extension CharactersVC: UICollectionViewDelegate {
-   
+   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+      let character = characters[indexPath.row]
+      let destinationVC = CharacterDetailVC(character: character)
+      navigationController?.pushViewController(destinationVC, animated: true)
+   }
 }
 
 //private func configureCollectionView() {
