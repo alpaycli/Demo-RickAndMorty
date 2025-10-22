@@ -9,7 +9,7 @@ import UIKit
 
 class CharacterDetailVC: UIViewController {
    
-   private let bookmarkManager = BookmarkManager()
+   private let bookmarkManager: BookmarkManagable
    
    private let bookmarkButton = UIButton()
    private let backButton = UIButton()
@@ -26,8 +26,9 @@ class CharacterDetailVC: UIViewController {
    
    var onUpdate: ((Character) -> Void)?
    private var character: Character
-   init(character: Character) {
+   init(character: Character, bookmarkManager: BookmarkManagable) {
       self.character = character
+      self.bookmarkManager = bookmarkManager
       super.init(nibName: nil, bundle: nil)
    }
    

@@ -7,26 +7,6 @@
 
 import UIKit
 
-private func makeFilterButton(title: String) -> UIButton {
-   var config = UIButton.Configuration.filled()
-   config.cornerStyle = .capsule
-   config.baseBackgroundColor = UIColor.systemGray6
-   config.baseForegroundColor = UIColor.systemPurple
-   
-   var attrTitle = AttributedString(title)
-   attrTitle.font = .systemFont(ofSize: 15, weight: .medium)
-   config.attributedTitle = attrTitle
-   
-   config.image = UIImage(systemName: "chevron.down")
-   config.imagePadding = 4
-   config.imagePlacement = .trailing
-   
-   let button = UIButton(configuration: config)
-   button.showsMenuAsPrimaryAction = true // 👈 tap to open
-   button.changesSelectionAsPrimaryAction = false
-   return button
-}
-
 class CharactersVC: UIViewController {
    
    enum GenderFilterOption: String {
@@ -78,9 +58,19 @@ class CharactersVC: UIViewController {
    }
    private var filtersStackView = UIStackView()
    
+   private let bookmarkManager: BookmarkManagable
    private let networkManager = NetworkManager.shared
    private var characters: [Character] = []
    private var filteredCharacters: [Character] = []
+   
+   init(bookmarkManager: BookmarkManagable) {
+      self.bookmarkManager = bookmarkManager
+      super.init(nibName: nil, bundle: nil)
+   }
+   
+   required init?(coder: NSCoder) {
+      fatalError("init(coder:) has not been implemented")
+   }
    
    override func viewDidLoad() {
       super.viewDidLoad()
@@ -273,7 +263,7 @@ class CharactersVC: UIViewController {
 extension CharactersVC: UICollectionViewDelegate {
    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
       let character = characters[indexPath.row]
-      let destinationVC = CharacterDetailVC(character: character)
+      let destinationVC = CharacterDetailVC(character: character, bookmarkManager: bookmarkManager)
       
       destinationVC.onUpdate = { [weak self] updatedCharacter in
          guard let self else { return }
@@ -299,3 +289,4 @@ extension CharactersVC: UISearchResultsUpdating {
       updateData(filteredItems)
    }
 }
+

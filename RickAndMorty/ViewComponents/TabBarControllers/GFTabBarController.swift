@@ -9,6 +9,8 @@
 import UIKit
 
 class GFTabBarController: UITabBarController {
+   
+   private let bookmarkManager: BookmarkManagable = BookmarkManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,7 +21,7 @@ class GFTabBarController: UITabBarController {
     
 
     func createCharactersVCNC() -> UINavigationController {
-        let searchVC = CharactersVC()
+        let searchVC = CharactersVC(bookmarkManager: bookmarkManager)
         searchVC.title = "CharactersVC"
        searchVC.tabBarItem = UITabBarItem(tabBarSystemItem: .contacts, tag: 0)
         
@@ -27,7 +29,7 @@ class GFTabBarController: UITabBarController {
     }
     
     func createFavoritesNC() -> UINavigationController {
-        let favoritesVC = FavoritesVC()
+        let favoritesVC = FavoritesVC(bookmarkManager: bookmarkManager)
         favoritesVC.title = "Favorites"
         favoritesVC.tabBarItem = UITabBarItem(tabBarSystemItem: .favorites, tag: 1)
         

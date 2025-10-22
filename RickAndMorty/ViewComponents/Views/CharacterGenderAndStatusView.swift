@@ -33,7 +33,7 @@ class CharacterGenderAndStatusView: UIView {
    }
    
    private func configure() {
-      layer.cornerRadius = 20
+      layer.cornerRadius = 25
       backgroundColor = .red
       
       addSubview(iconView)

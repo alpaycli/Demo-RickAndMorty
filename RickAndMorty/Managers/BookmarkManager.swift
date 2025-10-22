@@ -7,22 +7,29 @@
 
 import Foundation
 
-actor BookmarkManager {
-   var bookmarks: [Character] = []
+protocol BookmarkManagable {
+   @discardableResult
+   func toggle(_ character: Character) -> Bool
    
-   func isBookmarked(character: Character) -> Bool {
-      bookmarks.contains(character)
-   }
+   func getBookmarks() -> [Character]
+}
+
+/*actor*/ class BookmarkManager: BookmarkManagable {
+   private var bookmarks: [Character] = []
    
    @discardableResult
    func toggle(_ character: Character) -> Bool {
-      if isBookmarked(character: character) {
+      if character.isBookmarked {
          removeBookmark(character)
          return false
       } else {
          bookmark(character)
          return true
       }
+   }
+   
+   func getBookmarks() -> [Character] {
+      bookmarks
    }
    
    private func bookmark(_ character: Character) {
