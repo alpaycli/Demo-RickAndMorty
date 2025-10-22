@@ -88,15 +88,17 @@ class CharacterDetailVC: UIViewController {
       titleLabel.text = character.name
       titleLabel.textAlignment = .center
       titleLabel.font = UIFont.systemFont(ofSize: 48, weight: .bold)
-//      titleLabel.adjustsFontSizeToFitWidth = true
+      titleLabel.adjustsFontSizeToFitWidth = true
       titleLabel.minimumScaleFactor = 0.9
-      titleLabel.lineBreakMode = .byTruncatingTail
+      titleLabel.numberOfLines = 0
+      titleLabel.lineBreakMode = .byWordWrapping
       titleLabel.translatesAutoresizingMaskIntoConstraints = false
       
       NSLayoutConstraint.activate([
          titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
          titleLabel.topAnchor.constraint(equalTo: bookmarkButton.bottomAnchor, constant: 14),
-         titleLabel.heightAnchor.constraint(equalToConstant: 54)
+         titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+         titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8)
       ])
    }
    

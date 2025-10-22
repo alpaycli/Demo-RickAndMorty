@@ -7,7 +7,44 @@
 
 import UIKit
 
+private func makeFilterButton(title: String) -> UIButton {
+   var config = UIButton.Configuration.filled()
+   config.cornerStyle = .capsule
+   config.baseBackgroundColor = UIColor.systemGray6
+   config.baseForegroundColor = UIColor.systemPurple
+   
+   var attrTitle = AttributedString(title)
+   attrTitle.font = .systemFont(ofSize: 15, weight: .medium)
+   config.attributedTitle = attrTitle
+   
+   config.image = UIImage(systemName: "chevron.down")
+   config.imagePadding = 4
+   config.imagePlacement = .trailing
+   
+   let button = UIButton(configuration: config)
+   button.showsMenuAsPrimaryAction = true // 👈 tap to open
+   button.changesSelectionAsPrimaryAction = false
+   return button
+}
+
 class CharactersVC: UIViewController {
+   
+   enum GenderFilterOption: String {
+      case male = "Male"
+      case female = "Female"
+      case genderless = "Genderless"
+      case unknown = "unknown"
+   }
+   
+   enum ClassificationFilterOption: String {
+      case none = "none"
+   }
+   
+   enum StatusFilterOption: String {
+      case dead = "Dead"
+      case alive = "Alive"
+      case unknown = "unknown"
+   }
    
    private enum Section: Hashable {
       case main
@@ -16,22 +53,124 @@ class CharactersVC: UIViewController {
    private var dataSource: UICollectionViewDiffableDataSource<Section, Character>?
    
    private var collectionView: UICollectionView!
+   
+   private lazy var genderView = FilterButtonView(title: "Gender Type", menu: makeGenderTypeMenu())
+   private lazy var classificationView = FilterButtonView(title: "Classifications", menu: makeClassificationTypeMenu())
+   private lazy var statusView = FilterButtonView(title: "Status", menu: makeStatusTypeMenu())
+
+   
+   private var selectedGenderFilter: GenderFilterOption? {
+      didSet {
+         genderView.updateFilter(title: selectedGenderFilter?.rawValue,
+                                 defaultTitle: "Gender Type")
+         resetListWithExistingFilters()
+
+      }
+   }
+   private var selectedClassificationFilter: ClassificationFilterOption?
+   private var selectedStatusFilter: StatusFilterOption? {
+      didSet {
+         statusView.updateFilter(title: selectedStatusFilter?.rawValue,
+                                 defaultTitle: "Status Type")
+         resetListWithExistingFilters()
+
+      }
+   }
    private var filtersStackView = UIStackView()
    
    private let networkManager = NetworkManager.shared
    private var characters: [Character] = []
    private var filteredCharacters: [Character] = []
+   
+   override func viewDidLoad() {
+      super.viewDidLoad()
+      setupNavigationBar()
+      configureFiltersStackView()
+      configureCollectionView()
+      configureDataSource()
+      configureSearchBar()
+      Task {
+         await exampleRequest()
+      }
+   }
+   
+   private func configureFiltersStackView() {
+      filtersStackView.axis = .horizontal
+//      filtersStackView.distribution = .fillEqually
+      filtersStackView.spacing = 10
+      view.addSubview(filtersStackView)
+      
+      filtersStackView.translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate([
+         filtersStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+         filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+         filtersStackView.heightAnchor.constraint(equalToConstant: 40),
+      ])
+            
+      // Assign clear actions
+      genderView.onClear = { [weak self] in
+         self?.selectedGenderFilter = nil
+         self?.genderView.updateFilter(title: nil, defaultTitle: "Gender Type")
+         self?.resetListWithExistingFilters()
+      }
+      classificationView.onClear = { [weak self] in
+         self?.selectedClassificationFilter = nil
+      }
+      statusView.onClear = { [weak self] in
+         self?.selectedStatusFilter = nil
+         self?.statusView.updateFilter(title: nil, defaultTitle: "Status Type")
+         self?.resetListWithExistingFilters()
+      }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-       configureCollectionView()
-       configureDataSource()
-       configureSearchBar()
-       navigationItem.title = "Rick and Morty"
-       Task {
-          await exampleRequest()
-       }
-    }
+      filtersStackView.addArrangedSubview(genderView)
+      filtersStackView.addArrangedSubview(classificationView)
+      filtersStackView.addArrangedSubview(statusView)
+      
+   }
+   
+   private func resetListWithExistingFilters() {
+      if selectedGenderFilter == nil,
+         selectedStatusFilter == nil,
+         selectedClassificationFilter == nil
+      {
+         filteredCharacters = characters
+         updateData(filteredCharacters)
+         return
+      }
+      filteredCharacters = characters
+      
+      if let name = selectedGenderFilter?.rawValue {
+         filteredCharacters = filteredCharacters.filter({ $0.gender == name })
+      }
+      if let _ = selectedClassificationFilter?.rawValue {
+//         filteredCharacters = filteredCharacters.filter({ $0. })
+      }
+      if let name = selectedStatusFilter?.rawValue {
+         filteredCharacters = filteredCharacters.filter({ $0.status == name })
+      }
+      updateData(filteredCharacters)
+   }
+   
+   private func makeGenderTypeMenu() -> UIMenu {
+      let female = UIAction(title: "Female", handler: { _ in self.selectedGenderFilter = .female })
+      let male = UIAction(title: "Male", handler: { _ in self.selectedGenderFilter = .male })
+      let genderless = UIAction(title: "Genderless", handler: { _ in self.selectedGenderFilter = .genderless })
+      let unknown = UIAction(title: "unknown", handler: { _ in self.selectedGenderFilter = .unknown })
+      
+      return UIMenu(title: "", children: [female, male, genderless, unknown])
+   }
+   
+   private func makeClassificationTypeMenu() -> UIMenu {
+      return UIMenu(title: "", children: [])
+   }
+   
+   private func makeStatusTypeMenu() -> UIMenu {
+      let dead = UIAction(title: "Dead", handler: { _ in self.selectedStatusFilter = .dead })
+      let alive = UIAction(title: "Alive", handler: { _ in self.selectedStatusFilter = .alive })
+      let unknown = UIAction(title: "Unknown", handler: { _ in self.selectedStatusFilter = .unknown })
+      return UIMenu(title: "", children: [dead, alive, unknown])
+   }
    
    private func configureSearchBar() {
       let searchController = UISearchController(searchResultsController: nil)
@@ -46,7 +185,16 @@ class CharactersVC: UIViewController {
       collectionView.register(CharacterCell.self, forCellWithReuseIdentifier: CharacterCell.reuseId)
       collectionView.delegate = self
       
+      view.backgroundColor = .init(hexString: "#3A0564")
       collectionView.backgroundColor = .init(hexString: "#3A0564")
+      
+      collectionView.translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate([
+         collectionView.topAnchor.constraint(equalTo: filtersStackView.bottomAnchor, constant: 15),
+         collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+         collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+         collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      ])
    }
    
    private func configureDataSource() {
@@ -115,6 +263,11 @@ class CharactersVC: UIViewController {
       }
       
    }
+   
+   private func setupNavigationBar() {
+      navigationItem.title = "Rick and Morty"
+      navigationController?.navigationBar.prefersLargeTitles = true
+   }
 }
 
 extension CharactersVC: UICollectionViewDelegate {
@@ -125,8 +278,6 @@ extension CharactersVC: UICollectionViewDelegate {
       destinationVC.onUpdate = { [weak self] updatedCharacter in
          guard let self else { return }
          if let index = characters.firstIndex(where: { $0.id == updatedCharacter.id }) {
-            print(updatedCharacter.isBookmarked)
-            print(characters[index].isBookmarked)
             characters[index] = updatedCharacter
             updateData(self.characters)
          }
