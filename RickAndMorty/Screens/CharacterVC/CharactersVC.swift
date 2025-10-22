@@ -9,18 +9,18 @@ import UIKit
 
 class CharactersVC: UIViewController {
    
-   enum GenderFilterOption: String {
+   private enum GenderFilterOption: String {
       case male = "Male"
       case female = "Female"
       case genderless = "Genderless"
       case unknown = "unknown"
    }
    
-   enum ClassificationFilterOption: String {
+   private enum ClassificationFilterOption: String {
       case none = "none"
    }
    
-   enum StatusFilterOption: String {
+   private enum StatusFilterOption: String {
       case dead = "Dead"
       case alive = "Alive"
       case unknown = "unknown"
@@ -31,7 +31,6 @@ class CharactersVC: UIViewController {
    }
    
    private var dataSource: UICollectionViewDiffableDataSource<Section, Character>?
-   
    private var collectionView: UICollectionView!
    
    private lazy var genderView = FilterButtonView(title: "Gender Type", menu: makeGenderTypeMenu())
@@ -44,7 +43,6 @@ class CharactersVC: UIViewController {
          genderView.updateFilter(title: selectedGenderFilter?.rawValue,
                                  defaultTitle: "Gender Type")
          resetListWithExistingFilters()
-
       }
    }
    private var selectedClassificationFilter: ClassificationFilterOption?
@@ -80,13 +78,12 @@ class CharactersVC: UIViewController {
       configureDataSource()
       configureSearchBar()
       Task {
-         await exampleRequest()
+         await fetchCharacters()
       }
    }
    
    private func configureFiltersStackView() {
       filtersStackView.axis = .horizontal
-//      filtersStackView.distribution = .fillEqually
       filtersStackView.spacing = 10
       view.addSubview(filtersStackView)
       
@@ -104,9 +101,7 @@ class CharactersVC: UIViewController {
          self?.genderView.updateFilter(title: nil, defaultTitle: "Gender Type")
          self?.resetListWithExistingFilters()
       }
-      classificationView.onClear = { [weak self] in
-         self?.selectedClassificationFilter = nil
-      }
+      classificationView.onClear = {}
       statusView.onClear = { [weak self] in
          self?.selectedStatusFilter = nil
          self?.statusView.updateFilter(title: nil, defaultTitle: "Status Type")
@@ -116,7 +111,6 @@ class CharactersVC: UIViewController {
       filtersStackView.addArrangedSubview(genderView)
       filtersStackView.addArrangedSubview(classificationView)
       filtersStackView.addArrangedSubview(statusView)
-      
    }
    
    private func resetListWithExistingFilters() {
@@ -164,10 +158,36 @@ class CharactersVC: UIViewController {
    
    private func configureSearchBar() {
       let searchController = UISearchController(searchResultsController: nil)
-      searchController.searchResultsUpdater = self // Your view controller will update search results
+      searchController.searchResultsUpdater = self
       navigationItem.searchController = searchController
    }
    
+   private func fetchCharacters() async {
+      let urlString = "https://rickandmortyapi.com/api/character"
+      guard let url = URL(string: urlString) else { return }
+      
+      let urlRequest = URLRequest(url: url)
+
+      do {
+         let response = try await networkManager.fetch(CharacterResponse.self, url: urlRequest)
+         let characters = response.results
+         self.characters = characters
+         updateData(characters)
+      } catch {
+         print("Error", error.localizedDescription)
+      }
+      
+   }
+   
+   private func setupNavigationBar() {
+      navigationItem.title = "Rick and Morty"
+      navigationController?.navigationBar.prefersLargeTitles = true
+   }
+}
+
+// MARK: - CollectionView and (Compositionl) Layout
+
+extension CharactersVC {
    private func configureCollectionView() {
       collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
       view.addSubview(collectionView)
@@ -208,57 +228,34 @@ class CharactersVC: UIViewController {
 
    
    private func createCompositionalLayout() -> UICollectionViewCompositionalLayout {
-
-       return UICollectionViewCompositionalLayout { section, env -> NSCollectionLayoutSection? in
-           switch section {
-           case 0: return self.createFirstSection()
-//           case 1: return self.createSecondSection()
-           default: return self.createFirstSection()
-           }
-       }
+      
+      return UICollectionViewCompositionalLayout { section, env -> NSCollectionLayoutSection? in
+         switch section {
+            case 0: return self.createFirstSection()
+            default: return self.createFirstSection()
+         }
+      }
    }
    
    private func createFirstSection() -> NSCollectionLayoutSection {
-           let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .fractionalHeight(1.0))
-           
-           let item = NSCollectionLayoutItem(layoutSize: itemSize)
-           item.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 60, trailing: 5)
-           
-           let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.50), heightDimension: .fractionalHeight(0.55))
-                   
-           let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-           group.contentInsets = .init(top: 0, leading: 15, bottom: 0, trailing: 2)
-           
-           let section = NSCollectionLayoutSection(group: group)
-           section.orthogonalScrollingBehavior = .paging
-           
-           return section
-       }
-   
-   func exampleRequest() async {
-      let urlString = "https://rickandmortyapi.com/api/character"
-      guard let url = URL(string: urlString) else { return }
+      let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .fractionalHeight(1.0))
       
-      let urlRequest = URLRequest(url: url)
-
-      do {
-         let response = try await networkManager.fetch(CharacterResponse.self, url: urlRequest)
-         let characters = response.results
-         self.characters = characters
-         DispatchQueue.main.async {
-            self.updateData(characters)
-         }
-      } catch {
-         print("Error", error.localizedDescription)
-      }
+      let item = NSCollectionLayoutItem(layoutSize: itemSize)
+      item.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 60, trailing: 5)
       
-   }
-   
-   private func setupNavigationBar() {
-      navigationItem.title = "Rick and Morty"
-      navigationController?.navigationBar.prefersLargeTitles = true
+      let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.50), heightDimension: .fractionalHeight(0.55))
+      
+      let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+      group.contentInsets = .init(top: 0, leading: 15, bottom: 0, trailing: 2)
+      
+      let section = NSCollectionLayoutSection(group: group)
+      section.orthogonalScrollingBehavior = .paging
+      
+      return section
    }
 }
+
+// MARK: - UICollectionViewDelegate
 
 extension CharactersVC: UICollectionViewDelegate {
    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -277,6 +274,8 @@ extension CharactersVC: UICollectionViewDelegate {
    }
 }
 
+// MARK: - UISearchResultsUpdating
+
 extension CharactersVC: UISearchResultsUpdating {
    func updateSearchResults(for searchController: UISearchController) {
       guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
@@ -289,4 +288,3 @@ extension CharactersVC: UISearchResultsUpdating {
       updateData(filteredItems)
    }
 }
-

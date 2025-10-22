@@ -41,13 +41,11 @@ final class FilterButtonView: UIView {
         button.menu = menu
         button.showsMenuAsPrimaryAction = true
         
-        // Clear (xmark) button setup
         clearButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         clearButton.tintColor = .systemGray3
         clearButton.isHidden = true
         clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         
-        // Layout
         let stack = UIStackView(arrangedSubviews: [button, clearButton])
         stack.axis = .horizontal
         stack.alignment = .center

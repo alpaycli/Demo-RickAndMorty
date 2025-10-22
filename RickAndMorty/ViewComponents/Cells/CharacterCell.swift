@@ -89,10 +89,10 @@ final class CharacterCell: UICollectionViewCell {
          genderAndStatusView.widthAnchor.constraint(equalToConstant: 44),
          genderAndStatusView.heightAnchor.constraint(equalToConstant: 44),
          
-         bookmarkStatusView.topAnchor.constraint(equalTo: avatarImage.topAnchor, constant: 10),
+         bookmarkStatusView.topAnchor.constraint(equalTo: avatarImage.topAnchor, constant: 13),
          bookmarkStatusView.leadingAnchor.constraint(equalTo: avatarImage.leadingAnchor, constant: 5),
-         bookmarkStatusView.widthAnchor.constraint(equalToConstant: 24),
-         bookmarkStatusView.heightAnchor.constraint(equalToConstant: 24),
+         bookmarkStatusView.widthAnchor.constraint(equalToConstant: 28),
+         bookmarkStatusView.heightAnchor.constraint(equalToConstant: 34),
       ])
    }
 }
