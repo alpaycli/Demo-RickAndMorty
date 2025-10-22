@@ -9,23 +9,6 @@ import UIKit
 
 class CharactersVC: UIViewController {
    
-   private enum GenderFilterOption: String {
-      case male = "Male"
-      case female = "Female"
-      case genderless = "Genderless"
-      case unknown = "unknown"
-   }
-   
-   private enum ClassificationFilterOption: String {
-      case none = "none"
-   }
-   
-   private enum StatusFilterOption: String {
-      case dead = "Dead"
-      case alive = "Alive"
-      case unknown = "unknown"
-   }
-   
    private enum Section: Hashable {
       case main
    }
@@ -33,36 +16,17 @@ class CharactersVC: UIViewController {
    private var dataSource: UICollectionViewDiffableDataSource<Section, Character>?
    private var collectionView: UICollectionView!
    
-   private lazy var genderView = FilterButtonView(title: "Gender Type", menu: makeGenderTypeMenu())
-   private lazy var classificationView = FilterButtonView(title: "Classifications", menu: makeClassificationTypeMenu())
-   private lazy var statusView = FilterButtonView(title: "Status", menu: makeStatusTypeMenu())
+   private lazy var genderView = FilterButtonView(title: "Gender Type", menu: viewModel.makeGenderTypeMenu())
+   private lazy var classificationView = FilterButtonView(title: "Classifications", menu: viewModel.makeClassificationTypeMenu())
+   private lazy var statusView = FilterButtonView(title: "Status", menu: viewModel.makeStatusTypeMenu())
 
    
-   private var selectedGenderFilter: GenderFilterOption? {
-      didSet {
-         genderView.updateFilter(title: selectedGenderFilter?.rawValue,
-                                 defaultTitle: "Gender Type")
-         resetListWithExistingFilters()
-      }
-   }
-   private var selectedClassificationFilter: ClassificationFilterOption?
-   private var selectedStatusFilter: StatusFilterOption? {
-      didSet {
-         statusView.updateFilter(title: selectedStatusFilter?.rawValue,
-                                 defaultTitle: "Status Type")
-         resetListWithExistingFilters()
-
-      }
-   }
    private var filtersStackView = UIStackView()
    
-   private let bookmarkManager: BookmarkManagable
-   private let networkManager = NetworkManager.shared
-   private var characters: [Character] = []
-   private var filteredCharacters: [Character] = []
+   private let viewModel: CharactersViewModel
    
    init(bookmarkManager: BookmarkManagable) {
-      self.bookmarkManager = bookmarkManager
+      self.viewModel = .init(bookmarkManager: bookmarkManager)
       super.init(nibName: nil, bundle: nil)
    }
    
@@ -72,13 +36,14 @@ class CharactersVC: UIViewController {
    
    override func viewDidLoad() {
       super.viewDidLoad()
+      viewModel.output = self
       setupNavigationBar()
       configureFiltersStackView()
       configureCollectionView()
       configureDataSource()
       configureSearchBar()
       Task {
-         await fetchCharacters()
+         await viewModel.fetchCharacters()
       }
    }
    
@@ -90,22 +55,21 @@ class CharactersVC: UIViewController {
       filtersStackView.translatesAutoresizingMaskIntoConstraints = false
       NSLayoutConstraint.activate([
          filtersStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-         filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
+         filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -5),
          filtersStackView.heightAnchor.constraint(equalToConstant: 40),
       ])
             
-      // Assign clear actions
       genderView.onClear = { [weak self] in
-         self?.selectedGenderFilter = nil
+         self?.viewModel.selectedGenderFilter = nil
          self?.genderView.updateFilter(title: nil, defaultTitle: "Gender Type")
-         self?.resetListWithExistingFilters()
+         self?.viewModel.resetListWithExistingFilters()
       }
       classificationView.onClear = {}
       statusView.onClear = { [weak self] in
-         self?.selectedStatusFilter = nil
+         self?.viewModel.selectedStatusFilter = nil
          self?.statusView.updateFilter(title: nil, defaultTitle: "Status Type")
-         self?.resetListWithExistingFilters()
+         self?.viewModel.resetListWithExistingFilters()
       }
 
       filtersStackView.addArrangedSubview(genderView)
@@ -113,70 +77,10 @@ class CharactersVC: UIViewController {
       filtersStackView.addArrangedSubview(statusView)
    }
    
-   private func resetListWithExistingFilters() {
-      if selectedGenderFilter == nil,
-         selectedStatusFilter == nil,
-         selectedClassificationFilter == nil
-      {
-         filteredCharacters = characters
-         updateData(filteredCharacters)
-         return
-      }
-      filteredCharacters = characters
-      
-      if let name = selectedGenderFilter?.rawValue {
-         filteredCharacters = filteredCharacters.filter({ $0.gender == name })
-      }
-      if let _ = selectedClassificationFilter?.rawValue {
-//         filteredCharacters = filteredCharacters.filter({ $0. })
-      }
-      if let name = selectedStatusFilter?.rawValue {
-         filteredCharacters = filteredCharacters.filter({ $0.status == name })
-      }
-      updateData(filteredCharacters)
-   }
-   
-   private func makeGenderTypeMenu() -> UIMenu {
-      let female = UIAction(title: "Female", handler: { _ in self.selectedGenderFilter = .female })
-      let male = UIAction(title: "Male", handler: { _ in self.selectedGenderFilter = .male })
-      let genderless = UIAction(title: "Genderless", handler: { _ in self.selectedGenderFilter = .genderless })
-      let unknown = UIAction(title: "unknown", handler: { _ in self.selectedGenderFilter = .unknown })
-      
-      return UIMenu(title: "", children: [female, male, genderless, unknown])
-   }
-   
-   private func makeClassificationTypeMenu() -> UIMenu {
-      return UIMenu(title: "", children: [])
-   }
-   
-   private func makeStatusTypeMenu() -> UIMenu {
-      let dead = UIAction(title: "Dead", handler: { _ in self.selectedStatusFilter = .dead })
-      let alive = UIAction(title: "Alive", handler: { _ in self.selectedStatusFilter = .alive })
-      let unknown = UIAction(title: "Unknown", handler: { _ in self.selectedStatusFilter = .unknown })
-      return UIMenu(title: "", children: [dead, alive, unknown])
-   }
-   
    private func configureSearchBar() {
       let searchController = UISearchController(searchResultsController: nil)
       searchController.searchResultsUpdater = self
       navigationItem.searchController = searchController
-   }
-   
-   private func fetchCharacters() async {
-      let urlString = "https://rickandmortyapi.com/api/character"
-      guard let url = URL(string: urlString) else { return }
-      
-      let urlRequest = URLRequest(url: url)
-
-      do {
-         let response = try await networkManager.fetch(CharacterResponse.self, url: urlRequest)
-         let characters = response.results
-         self.characters = characters
-         updateData(characters)
-      } catch {
-         print("Error", error.localizedDescription)
-      }
-      
    }
    
    private func setupNavigationBar() {
@@ -259,18 +163,7 @@ extension CharactersVC {
 
 extension CharactersVC: UICollectionViewDelegate {
    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-      let character = characters[indexPath.row]
-      let destinationVC = CharacterDetailVC(character: character, bookmarkManager: bookmarkManager)
-      
-      destinationVC.onUpdate = { [weak self] updatedCharacter in
-         guard let self else { return }
-         if let index = characters.firstIndex(where: { $0.id == updatedCharacter.id }) {
-            characters[index] = updatedCharacter
-            updateData(self.characters)
-         }
-      }
-      
-      navigationController?.pushViewController(destinationVC, animated: true)
+      viewModel.didSelectItem(at: indexPath, navController: navigationController)
    }
 }
 
@@ -278,13 +171,29 @@ extension CharactersVC: UICollectionViewDelegate {
 
 extension CharactersVC: UISearchResultsUpdating {
    func updateSearchResults(for searchController: UISearchController) {
-      guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
-          // If search text is empty, display all items
-         updateData(characters)
-          return
-      }
-
-      let filteredItems = characters.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-      updateData(filteredItems)
+      viewModel.updateSearchResults(for: searchController)
    }
+}
+
+// MARK: - ViewModel communication
+
+extension CharactersVC: CharacterViewModelOutput {
+   func genderFilterUpdated(_ genderFilterOption: GenderFilterOption?) {
+      genderView.updateFilter(title: genderFilterOption?.rawValue,
+                              defaultTitle: "Gender Type")
+   }
+   
+   func classificationFilterUpdated(_ classificationFilterOption: ClassificationFilterOption?) {
+      classificationView.updateFilter(title: classificationFilterOption?.rawValue,
+                              defaultTitle: "Classification")
+   }
+   
+   func statusFilterUpdated(_ statusFilterOption: StatusFilterOption?) {
+      statusView.updateFilter(title: statusFilterOption?.rawValue,
+                              defaultTitle: "Status")
+   }
+   
+    func updateView(with characters: [Character]) {
+        updateData(characters)
+    }
 }

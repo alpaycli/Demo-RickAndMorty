@@ -5,6 +5,10 @@
 //  Created by Alpay Calalli on 20.10.25.
 //
 
+// TODO: Custom font
+// TODO: DetailVC texts
+// TODO: Cell design
+
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
