@@ -13,6 +13,9 @@ class CharactersVC: UIViewController {
       case main
    }
    
+   private var navTitleLabel = UILabel()
+   private var navSubtitleLabel = UILabel()
+   private let searchField = SearchTextField()
    private var dataSource: UICollectionViewDiffableDataSource<Section, Character>?
    private var collectionView: UICollectionView!
    
@@ -38,13 +41,17 @@ class CharactersVC: UIViewController {
       super.viewDidLoad()
       viewModel.output = self
       setupNavigationBar()
+      configureSearchBar()
       configureFiltersStackView()
       configureCollectionView()
       configureDataSource()
-      configureSearchBar()
       Task {
          await viewModel.fetchCharacters()
       }
+   }
+   
+   override func viewWillAppear(_ animated: Bool) {
+      self.navigationController?.setNavigationBarHidden(true, animated: animated)
    }
    
    private func configureFiltersStackView() {
@@ -54,8 +61,8 @@ class CharactersVC: UIViewController {
       
       filtersStackView.translatesAutoresizingMaskIntoConstraints = false
       NSLayoutConstraint.activate([
-         filtersStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
+         filtersStackView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 10),
+         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
          filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -5),
          filtersStackView.heightAnchor.constraint(equalToConstant: 40),
       ])
@@ -78,15 +85,48 @@ class CharactersVC: UIViewController {
    }
    
    private func configureSearchBar() {
-      let searchController = UISearchController(searchResultsController: nil)
-      searchController.searchResultsUpdater = self
-      navigationItem.searchController = searchController
+      searchField.delegate = self
+      searchField.translatesAutoresizingMaskIntoConstraints = false
+      view.addSubview(searchField)
+
+      NSLayoutConstraint.activate([
+         searchField.topAnchor.constraint(equalTo: navSubtitleLabel.bottomAnchor, constant: 20),
+          searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+          searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+          searchField.heightAnchor.constraint(equalToConstant: 44)
+      ])
    }
    
    private func setupNavigationBar() {
-      navigationItem.title = "Rick and Morty"
-      navigationController?.navigationBar.prefersLargeTitles = true
+      navTitleLabel.numberOfLines = 2
+      navTitleLabel.font = UIFont(name: "IrishGrover-Regular", size: 44)
+      navTitleLabel.textColor = .white
+      navTitleLabel.text = "Rick and Morty"
+      
+      navSubtitleLabel.numberOfLines = 2
+      navSubtitleLabel.font = UIFont(name: "IrishGrover-Regular", size: 24)
+      navSubtitleLabel.textColor = .white
+      navSubtitleLabel.text = "fandom"
+      
+      view.addSubview(navTitleLabel)
+      view.addSubview(navSubtitleLabel)
+      
+      navTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+      navSubtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate([
+         navTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+         navTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+         navTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+         navTitleLabel.heightAnchor.constraint(equalToConstant: 44),
+         
+         
+         navSubtitleLabel.topAnchor.constraint(equalTo: navTitleLabel.bottomAnchor, constant: 0),
+         navSubtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+         navSubtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+         navSubtitleLabel.heightAnchor.constraint(equalToConstant: 24),
+      ])
    }
+
 }
 
 // MARK: - CollectionView and (Compositionl) Layout
@@ -167,11 +207,12 @@ extension CharactersVC: UICollectionViewDelegate {
    }
 }
 
-// MARK: - UISearchResultsUpdating
+// MARK: - Search Field delegate
 
-extension CharactersVC: UISearchResultsUpdating {
-   func updateSearchResults(for searchController: UISearchController) {
-      viewModel.updateSearchResults(for: searchController)
+extension CharactersVC: UITextFieldDelegate {
+   func textFieldDidChangeSelection(_ textField: UITextField) {
+      guard let searchText = textField.text else { return }
+      viewModel.updateSearchResults(searchText: searchText)
    }
 }
 

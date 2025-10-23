@@ -17,6 +17,7 @@ class GFTabBarController: UITabBarController {
        overrideUserInterfaceStyle = .dark
         UITabBar.appearance().tintColor = .systemGreen
         viewControllers = [createCharactersVCNC(), createFavoritesNC()]
+       checkFonts()
     }
     
 
@@ -36,4 +37,10 @@ class GFTabBarController: UITabBarController {
         return UINavigationController(rootViewController: favoritesVC)
     }
 
+   private func checkFonts() {
+      for family in UIFont.familyNames.sorted() {
+          let names = UIFont.fontNames(forFamilyName: family)
+          print("Family: \(family) Font names: \(names)")
+      }
+   }
 }

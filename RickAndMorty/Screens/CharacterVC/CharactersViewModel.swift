@@ -69,6 +69,17 @@ class CharactersViewModel {
       output?.updateView(with: filteredItems)
    }
    
+   func updateSearchResults(searchText: String) {
+      guard !searchText.isEmpty else {
+          // If search text is empty, display all items
+         output?.updateView(with: characters)
+          return
+      }
+      
+      let filteredItems = characters.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+      output?.updateView(with: filteredItems)
+   }
+   
    func fetchCharacters() async {
       let urlString = "https://rickandmortyapi.com/api/character"
       guard let url = URL(string: urlString) else { return }

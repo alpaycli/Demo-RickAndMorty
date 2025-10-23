@@ -75,11 +75,22 @@ class CharacterDetailVC: UIViewController {
          detailsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
       ])
       
-      genderLabel.text = NSLocalizedString("Gender", comment: "") + ": \(character.gender)"
-      statusLabel.text = NSLocalizedString("Species", comment: "") + ": \(character.status)"
-      speciesLabel.text = NSLocalizedString("Species", comment: "") + ": \(character.species)"
-      typeLabel.text = NSLocalizedString("Type", comment: "") + ": \(character.type)"
-      originLabel.text = NSLocalizedString("Origin", comment: "") + ": \(character.origin.name)"
+      genderLabel.attributedText = NSMutableAttributedString()
+         .bold(NSLocalizedString("Gender", comment: ""))
+         .normal(": \(character.gender)")
+      statusLabel.attributedText = NSMutableAttributedString()
+         .bold(NSLocalizedString("Species", comment: ""))
+         .normal(": \(character.status)")
+      speciesLabel.attributedText = NSMutableAttributedString()
+         .bold(NSLocalizedString("Species", comment: ""))
+         .normal(": \(character.species)")
+      typeLabel.attributedText = NSMutableAttributedString()
+         .bold(NSLocalizedString("Type", comment: ""))
+         .normal(": \(character.type)")
+      originLabel.attributedText = NSMutableAttributedString()
+         .bold(NSLocalizedString("Origin", comment: ""))
+         .normal(": \(character.origin.name)")
+      
       bookmarkButton.setImage(.init(named: character.isBookmarked ? BookmarkImage.bookmarkFilled.rawValue : BookmarkImage.bookmark.rawValue), for: .normal)
    }
    

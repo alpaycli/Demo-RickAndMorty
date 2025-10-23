@@ -11,15 +11,15 @@ import UIKit
 final class CharacterCell: UICollectionViewCell {
    static let reuseId = "CharacterCell"
    private let avatarImage = GFAvatarImageView(frame: .zero)
-   private let titleLabel = GFTitleLabel(textAlignment: .left, fontSize: 16)
-   private let secondTitleLabel = GFSecondaryTitleLabel(fontSize: 14)
+   private let titleLabel = GFTitleLabel(textAlignment: .left, fontSize: 22)
+   private let secondTitleLabel = GFTitleLabel(textAlignment: .center, fontSize: 18)
    private let genderAndStatusView = CharacterGenderAndStatusView()
    private let bookmarkStatusView = UIImageView()
    
    override init(frame: CGRect) {
       super.init(frame: frame)
-      layer.borderWidth = 0.5
-      layer.borderColor = UIColor.systemGray3.cgColor
+//      layer.borderWidth = 0.5
+//      layer.borderColor = UIColor.systemGray3.cgColor
       layer.cornerRadius = 5
       configureImageAndTitle()
    }
