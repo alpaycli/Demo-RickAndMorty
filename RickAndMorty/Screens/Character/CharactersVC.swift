@@ -144,7 +144,7 @@ extension CharactersVC {
       
       collectionView.translatesAutoresizingMaskIntoConstraints = false
       NSLayoutConstraint.activate([
-         collectionView.topAnchor.constraint(equalTo: filtersStackView.bottomAnchor, constant: 15),
+         collectionView.topAnchor.constraint(equalTo: filtersStackView.bottomAnchor, constant: 25),
          collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
          collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
          collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),

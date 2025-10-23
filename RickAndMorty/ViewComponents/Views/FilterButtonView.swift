@@ -26,10 +26,10 @@ final class FilterButtonView: UIView {
       var config = UIButton.Configuration.filled()
       config.cornerStyle = .capsule
       config.baseBackgroundColor = .init(hexString: "#D9D9D9")
-      config.baseForegroundColor = .init(hexString: "#6B007C80")
+      config.baseForegroundColor = .init(hexString: "#A26CAB")
       
       var attrTitle = AttributedString(title)
-      attrTitle.font = .systemFont(ofSize: 15, weight: .medium)
+      attrTitle.font = .systemFont(ofSize: 14, weight: .medium)
       config.attributedTitle = attrTitle
       
       config.image = UIImage(systemName: "chevron.down")
