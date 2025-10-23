@@ -23,6 +23,7 @@ class CharactersViewModel {
    var characters: [Character] = []
    var filteredCharacters: [Character] = []
    
+   private var isSearching = false
    private var page = 1
    private var hasMoreCharacters: Bool = true
    private var isLoadingCharacters = false
@@ -62,39 +63,49 @@ class CharactersViewModel {
    }
    
    func didSelectItem(at indexPath: IndexPath, navController: UINavigationController?) {
-      let character = characters[indexPath.row]
+      let characters = filteredCharacters.isEmpty ? characters : filteredCharacters
+      let character = characters[indexPath.item]
       let destinationVC = CharacterDetailVC(character: character, bookmarkManager: bookmarkManager)
       
       destinationVC.onUpdate = { [weak self] updatedCharacter in
          guard let self else { return }
+         
          if let index = characters.firstIndex(where: { $0.id == updatedCharacter.id }) {
-            characters[index] = updatedCharacter
-            output?.updateView(with: characters)
+            self.characters[index] = updatedCharacter
+            output?.updateView(with: self.characters)
          }
       }
       
       navController?.pushViewController(destinationVC, animated: true)
    }
    
+   @available(*, deprecated)
    func updateSearchResults(for searchController: UISearchController) {
       guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
           // If search text is empty, display all items
+         isSearching = false
+         filteredCharacters = []
          output?.updateView(with: characters)
           return
       }
 
       let filteredItems = characters.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+      filteredCharacters = filteredItems
       output?.updateView(with: filteredItems)
    }
    
    func updateSearchResults(searchText: String) {
       guard !searchText.isEmpty else {
           // If search text is empty, display all items
+         isSearching = false
          output?.updateView(with: characters)
           return
       }
       
+      isSearching = true
+      
       let filteredItems = characters.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+      filteredCharacters = filteredItems
       output?.updateView(with: filteredItems)
    }
    
