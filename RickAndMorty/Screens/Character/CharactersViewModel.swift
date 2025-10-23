@@ -23,6 +23,10 @@ class CharactersViewModel {
    var characters: [Character] = []
    var filteredCharacters: [Character] = []
    
+   private var page = 1
+   private var hasMoreCharacters: Bool = true
+   private var isLoadingCharacters = false
+   
    weak var output: CharacterViewModelOutput?
    
    var selectedGenderFilter: GenderFilterOption? {
@@ -41,6 +45,20 @@ class CharactersViewModel {
    
    init(bookmarkManager: BookmarkManagable) {
       self.bookmarkManager = bookmarkManager
+   }
+   
+   func handleScrollViewForPagination(_ scrollView: UIScrollView) {
+       let scrollY = scrollView.contentOffset.y
+       let contentHeight = scrollView.contentSize.height
+       let screenHeight = scrollView.frame.size.height
+       
+       if scrollY > contentHeight - screenHeight {
+           guard hasMoreCharacters, !isLoadingCharacters else { return }
+           page += 1
+           Task {
+              await fetchCharacters()
+           }
+       }
    }
    
    func didSelectItem(at indexPath: IndexPath, navController: UINavigationController?) {
@@ -81,18 +99,22 @@ class CharactersViewModel {
    }
    
    func fetchCharacters() async {
-      let urlString = "https://rickandmortyapi.com/api/character"
+      let urlString = "https://rickandmortyapi.com/api/character/?page=\(page)"
       guard let url = URL(string: urlString) else { return }
       
       let urlRequest = URLRequest(url: url)
 
+      isLoadingCharacters = true
       do {
          let response = try await networkManager.fetch(CharacterResponse.self, url: urlRequest)
-         let characters = response.results
-         self.characters = characters
+         let result = response.results
+         characters.append(contentsOf: result)
          output?.updateView(with: characters)
+         if response.results.count < 20 { self.hasMoreCharacters = false }
+         isLoadingCharacters = false
       } catch {
          print("Error", error.localizedDescription)
+         isLoadingCharacters = false
       }
       
    }

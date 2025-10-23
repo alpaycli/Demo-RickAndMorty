@@ -207,6 +207,10 @@ extension CharactersVC: UICollectionViewDelegate {
    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
       viewModel.didSelectItem(at: indexPath, navController: navigationController)
    }
+   
+   func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+      viewModel.handleScrollViewForPagination(scrollView)
+   }
 }
 
 // MARK: - Search Field delegate
