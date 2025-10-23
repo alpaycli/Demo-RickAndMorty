@@ -51,7 +51,7 @@ class CharactersVC: UIViewController {
    }
    
    override func viewWillAppear(_ animated: Bool) {
-      self.navigationController?.setNavigationBarHidden(true, animated: animated)
+      navigationController?.setNavigationBarHidden(true, animated: animated)
    }
    
    private func configureFiltersStackView() {
@@ -68,15 +68,17 @@ class CharactersVC: UIViewController {
       ])
             
       genderView.onClear = { [weak self] in
-         self?.viewModel.selectedGenderFilter = nil
-         self?.genderView.updateFilter(title: nil, defaultTitle: "Gender Type")
-         self?.viewModel.resetListWithExistingFilters()
+         guard let self else { return }
+         viewModel.selectedGenderFilter = nil
+         genderView.updateFilter(title: nil, defaultTitle: "Gender Type")
+         viewModel.resetListWithExistingFilters()
       }
       classificationView.onClear = {}
       statusView.onClear = { [weak self] in
-         self?.viewModel.selectedStatusFilter = nil
-         self?.statusView.updateFilter(title: nil, defaultTitle: "Status Type")
-         self?.viewModel.resetListWithExistingFilters()
+         guard let self else { return }
+         viewModel.selectedStatusFilter = nil
+         statusView.updateFilter(title: nil, defaultTitle: "Status Type")
+         viewModel.resetListWithExistingFilters()
       }
 
       filtersStackView.addArrangedSubview(genderView)
