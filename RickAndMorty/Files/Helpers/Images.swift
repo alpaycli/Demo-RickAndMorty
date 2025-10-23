@@ -9,7 +9,6 @@ import Foundation
 
 enum BookmarkImage: String {
    case bookmark = "bookmark-icon"
-   /// Means remove bookmark
    case bookmarkFilled = "bookmark-icon-filled"
    case bookmarkGreenFilled = "bookmark-icon-green"
    
