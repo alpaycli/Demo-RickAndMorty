@@ -78,7 +78,6 @@ class FavoritesVC: UIViewController {
       configureCollectionView()
       configureDataSource()
       configureSearchBar()
-      print(bookmarkManager.getBookmarks().count)
    }
    
    override func viewWillAppear(_ animated: Bool) {
@@ -94,12 +93,11 @@ class FavoritesVC: UIViewController {
       filtersStackView.translatesAutoresizingMaskIntoConstraints = false
       NSLayoutConstraint.activate([
          filtersStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+         filtersStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
          filtersStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
          filtersStackView.heightAnchor.constraint(equalToConstant: 40),
       ])
             
-      // Assign clear actions
       genderView.onClear = { [weak self] in
          self?.selectedGenderFilter = nil
          self?.genderView.updateFilter(title: nil, defaultTitle: "Gender Type")

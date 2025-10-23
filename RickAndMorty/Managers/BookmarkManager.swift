@@ -20,16 +20,17 @@ protocol BookmarkManagable {
    @discardableResult
    func toggle(_ character: Character) -> Bool {
       if character.isBookmarked {
-         removeBookmark(character)
-         return false
-      } else {
          bookmark(character)
          return true
+      } else {
+         removeBookmark(character)
+         return false
       }
    }
    
    func getBookmarks() -> [Character] {
-      bookmarks
+      print(bookmarks.map({ $0.isBookmarked }))
+      return bookmarks
    }
    
    private func bookmark(_ character: Character) {
